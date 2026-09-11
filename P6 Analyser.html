@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Critical Activity Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E4A46; --ink-2:#17786E; --paper:#EFF5F3; --surface:#FFFFFF;
+    --line:#C4D4D0; --line-soft:#DEE9E6; --text:#16302C; --muted:#5A6E69;
+    --crit:#B23A2E; --crit-bg:#FBECEA; --a5:#B07A16; --a5-bg:#FBF3E2; --a10:#8A7A3A; --a10-bg:#F5F3E8;
+    --ok:#2F7D5B; --ok-bg:#EAF3EE; --lp:#0F7C8C; --lp-bg:#E1F1F3;
+    --sans:'Comic Sans MS','Comic Neue',cursive; --mono:'Comic Sans MS','Comic Neue',cursive;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+  header{background:var(--ink);color:#E6F2F0;background-image:linear-gradient(rgba(14,74,70,.94),rgba(14,74,70,.94)),
+    repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),
+    repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px)}
+  header .wrap{padding:30px 20px 28px}
+  h1{font-family:var(--sans);font-weight:700;font-size:clamp(24px,4vw,34px);margin:0;color:#fff;letter-spacing:-.02em}
+  main{padding:24px 0 50px}
+
+  .drop{border:1.5px dashed var(--line);border-radius:8px;background:var(--surface);padding:34px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+  .drop:hover,.drop.over{border-color:var(--ink);background:#F6FAF9}
+  .drop .big{font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink)}
+  .drop .small{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px}
+
+  .hidden{display:none}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:20px 0}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:13px 15px}
+  .kpi .l{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--muted)}
+  .kpi .v{font-family:var(--sans);font-weight:700;font-size:21px;color:var(--ink);margin-top:3px}
+  .kpi .v small{font-weight:500;font-size:12px;color:var(--muted)}
+
+  .health{border-radius:6px;padding:12px 15px;font-size:13.5px;margin:4px 0 16px}
+  .health.warn{background:var(--crit-bg);border:1px solid #E7C3BD;color:#7A241B}
+  .health.ok{background:var(--ok-bg);border:1px solid #C6E0D2;color:#255c43}
+
+  h2{font-family:var(--sans);font-size:15px;color:var(--ink);margin:26px 0 10px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:6px}
+
+  .brief{padding:18px 20px;border-left:4px solid var(--ink)}
+  .brief .bt{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--muted);margin-bottom:8px}
+  .brief p{margin:0;font-size:15px;line-height:1.6;color:var(--text)}
+  .brief b{color:var(--ink)}
+
+  .controls{padding:15px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:14px}
+  .ctl{display:flex;flex-direction:column;gap:6px}
+  .ctl .lab{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.03em}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .seg button{font-family:var(--mono);font-size:12.5px;padding:7px 12px;border:0;background:var(--surface);color:var(--muted);cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  input[type=number]{font-family:var(--mono);font-size:13px;padding:7px 9px;border:1px solid var(--line);border-radius:5px}
+
+  .windowtabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+  .windowtabs button{font-family:var(--sans);font-weight:600;font-size:13.5px;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:5px;cursor:pointer}
+  .windowtabs button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .tablewrap{overflow:hidden}
+  .cap{font-family:var(--mono);font-size:12px;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line-soft)}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--muted);font-weight:500;background:#F5F8F7;position:sticky;top:0}
+  td.id,td.tf{font-family:var(--mono);font-size:12px;white-space:nowrap}
+  td.tf,th.r{text-align:right}
+  .scroll{max-height:420px;overflow:auto}
+  .badge{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:3px;white-space:nowrap}
+  .b-crit{background:var(--crit-bg);color:var(--crit)} .b-a5{background:var(--a5-bg);color:var(--a5)}
+  .b-a10{background:var(--a10-bg);color:var(--a10)} .b-lp{background:var(--lp-bg);color:var(--lp)}
+  tr.crit td.tf{color:var(--crit);font-weight:600}
+  .prio{font-family:var(--mono);font-size:11px;font-weight:500;white-space:nowrap}
+  .whybtn{font-family:var(--mono);font-size:11px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:3px;padding:2px 8px}
+  .whybtn:hover{border-color:var(--ink)}
+  #whybox{margin-top:10px;padding:12px 14px;border:1px solid var(--line-soft);border-left:3px solid var(--lp);border-radius:4px;background:#F6FBFB;font-size:13.5px;color:var(--text);display:none}
+
+  .sim{padding:16px}
+  .sim h3{font-family:var(--sans);font-size:16px;margin:0 0 4px;color:var(--ink)}
+  .sim p.desc{font-size:13px;color:var(--muted);margin:0 0 14px}
+  .simrow{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  input[type=text]{font-family:var(--sans);font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:5px;min-width:260px}
+  .btn{font-family:var(--sans);font-weight:600;font-size:14px;cursor:pointer;border-radius:5px;padding:9px 16px;border:1px solid var(--ink);background:var(--ink);color:#fff}
+  .btn.ghost{background:var(--surface);color:var(--ink)}
+  .simout{margin-top:16px}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:12px 0}
+  .metric{border:1px solid var(--line-soft);border-radius:5px;padding:10px 12px;background:#F6FAF9}
+  .metric .l{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .metric .v{font-family:var(--sans);font-weight:700;font-size:18px;color:var(--ink)}
+  .metric.hot .v{color:var(--crit)}
+  .simverdict{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);margin-bottom:4px}
+  .simverdict b{color:var(--crit)}
+
+  .chain{display:flex;gap:6px;overflow-x:auto;padding:12px 2px;align-items:flex-start}
+  .level{display:flex;flex-direction:column;gap:7px;min-width:150px}
+  .lvlhdr{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .node{border:1px solid var(--line);border-left:3px solid var(--lp);border-radius:4px;padding:6px 8px;background:var(--surface);font-size:11.5px}
+  .node.crit{border-left-color:var(--crit);background:var(--crit-bg)}
+  .node.a5{border-left-color:var(--a5);background:var(--a5-bg)}
+  .node.a10{border-left-color:var(--a10)}
+  .node .nc{font-family:var(--mono);font-weight:600;color:var(--ink)}
+  .node .nn{color:#42525f;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .node .nf{font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .arrow{align-self:center;color:var(--muted);font-size:16px;padding-top:22px}
+
+  details.method{margin:8px 0 0;font-size:13px}
+  details.method summary{cursor:pointer;font-family:var(--mono);font-size:11.5px;color:var(--lp)}
+  details.method .mbody{padding:10px 0 2px;color:var(--text);font-family:var(--mono);font-size:11.5px;line-height:1.6}
+
+  .exportrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  .gantt{border:1px solid var(--line);border-radius:6px;background:var(--surface);overflow:hidden}
+  .grow{display:grid;grid-template-columns:210px 1fr;align-items:center}
+  .ghead{border-bottom:1px solid var(--line-soft);height:30px}
+  .glabel{font-family:var(--mono);font-size:11px;color:var(--ink);padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--line-soft)}
+  .glabel .gl2{color:var(--muted)}
+  .gaxis{position:relative;height:30px}
+  .gaxis .tick{position:absolute;top:9px;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .gaxis .tickm{position:absolute;top:0;bottom:0;width:1px;background:var(--line-soft)}
+  .grows{max-height:460px;overflow:auto}
+  .grows .grow{height:22px;border-bottom:1px solid #EAF1EF}
+  .gtrack{position:relative;height:100%}
+  .gbar{position:absolute;top:5px;height:12px;border-radius:2px;cursor:pointer;background:#8FA6A2;min-width:2px}
+  .gbar.crit{background:var(--crit)} .gbar.a5{background:var(--a5)} .gbar.a10{background:var(--a10)} .gbar.lp{background:var(--lp)} .gbar.norm{background:#8FA6A2}
+  .gbar:hover{outline:1px solid var(--ink)}
+  .glegend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted);margin:8px 0 2px}
+  .glegend span{display:inline-flex;align-items:center;gap:5px}
+  .glegend i{width:12px;height:8px;border-radius:2px;display:inline-block}
+
+  .note{font-family:var(--mono);font-size:11.5px;color:var(--muted);border-left:2px solid var(--line);padding-left:12px;line-height:1.5;margin-top:22px}
+  footer{text-align:center;padding:20px 20px 36px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-top:1px solid var(--line-soft);margin-top:30px}
+  footer .me{color:var(--lp);font-weight:600;text-decoration:none;border-bottom:1px solid var(--lp)}
+  footer .me:hover{color:var(--ink);border-bottom-color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Daily Critical Activity Monitor</h1>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="dropzone" class="drop" tabindex="0" role="button" aria-label="Upload XER file">
+    <div class="big">Drop your P6 export file here, or click to choose</div>
+    <div class="small">Reads Primavera P6 XER exports. Everything runs on this device.</div>
+    <input type="file" id="filein" accept=".xer" hidden>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="summary" id="summary"></div>
+    <div id="health"></div>
+
+    <h2>Today's schedule brief</h2>
+    <div class="card brief" id="brief"></div>
+
+    <h2>Top 10 schedule risks</h2>
+    <div class="card tablewrap">
+      <div class="cap"><span>Ranked by an indicative Schedule Exposure Score (0 to 100)</span><span id="riskcap"></span></div>
+      <div class="scroll"><table>
+        <thead><tr><th>#</th><th>Activity</th><th>Name</th><th class="r">Float</th><th class="r">Down</th><th>LP</th><th class="r">Score</th><th>Priority</th><th></th></tr></thead>
+        <tbody id="riskbody"></tbody>
+      </table></div>
+    </div>
+    <div id="whybox"></div>
+    <details class="method"><summary>How the Schedule Exposure Score is calculated</summary>
+      <div class="mbody">Score = Float Exposure + Downstream Exposure + Longest Path Factor + Status Factor (out of 100). It is an indicative planning aid, not a statistical probability of delay.<br>
+        Float Exposure (0 to 40): 40 at zero or negative float, easing down to 0 at 30 days of float.<br>
+        Downstream Exposure (0 to 30): scaled by successor count divided by the largest successor network in the file.<br>
+        Longest Path Factor: adds 20 when P6 flags the activity on the driving path.<br>
+        Status Factor: adds 10 when in progress, 5 when not started, 0 when complete.<br>
+        Priority: 🔴 High 70 and above · 🟠 Medium 40 to 69 · 🟢 Low below 40.</div>
+    </details>
+
+    <h2>Critical and near critical activities</h2>
+    <div class="card controls">
+      <div class="ctl"><span class="lab">Definition of critical</span>
+        <div class="seg" id="mode">
+          <button data-mode="tf" aria-pressed="true">Total Float ≤</button>
+          <button data-mode="lp" aria-pressed="false">Longest Path</button>
+        </div></div>
+      <div class="ctl" id="thrctl"><span class="lab">Threshold (days)</span><input type="number" id="thr" value="0" step="1" style="width:64px"></div>
+      <div class="ctl"><span class="lab">Hours per day</span><input type="number" id="hpd" value="8" step="1" min="1" style="width:64px"></div>
+      <div class="ctl"><span class="lab">Reference point</span>
+        <div class="seg" id="refmode">
+          <button data-ref="data" aria-pressed="true">Data date</button>
+          <button data-ref="today" aria-pressed="false">Today</button>
+        </div></div>
+    </div>
+    <div class="windowtabs" id="windowtabs">
+      <button data-win="day" aria-pressed="false">This day</button>
+      <button data-win="month" aria-pressed="false">This month</button>
+      <button data-win="year" aria-pressed="true">This year</button>
+      <button data-win="all" aria-pressed="false">All</button>
+    </div>
+    <div class="card tablewrap">
+      <div class="cap" id="tablecap"></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Activity ID</th><th>Name</th><th>Start</th><th>Finish</th><th class="r">Total float</th><th>Flag</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table></div>
+    </div>
+
+    <h2>Programme timeline (Gantt)</h2>
+    <div class="windowtabs" id="ganttfilter">
+      <button data-g="top10" aria-pressed="true">Top 10 risks</button>
+      <button data-g="crit" aria-pressed="false">Critical</button>
+      <button data-g="near" aria-pressed="false">Near critical</button>
+      <button data-g="all" aria-pressed="false">All</button>
+    </div>
+    <div class="glegend">
+      <span><i style="background:var(--crit)"></i>Critical</span>
+      <span><i style="background:var(--a5)"></i>Under 5 days</span>
+      <span><i style="background:var(--a10)"></i>Under 10 days</span>
+      <span><i style="background:var(--lp)"></i>Longest Path</span>
+      <span><i style="background:#8FA6A2"></i>Normal</span>
+      <span>Dashed line marks the data date</span>
+    </div>
+    <div class="gantt"><div id="gantt"></div></div>
+    <div class="note" style="margin-top:6px">Bars use early (planned) dates. Click any bar to load it into the simulator. Planned versus current comparison arrives with the Baseline module.</div>
+
+    <h2>Delay simulator</h2>
+    <div class="card sim">
+      <p class="desc">Pick an activity and a delay. The tool walks its successor chain and reports which downstream activities would lose their slack. This is an indicative float consumption estimate, not a full reschedule in P6.</p>
+      <div class="simrow">
+        <div class="ctl"><span class="lab">Activity (type an ID or name)</span>
+          <input type="text" id="simpick" list="acts" placeholder="start typing an activity">
+          <datalist id="acts"></datalist></div>
+        <div class="ctl"><span class="lab">Delay (days)</span><input type="number" id="simdelay" value="10" step="1" min="1" style="width:80px"></div>
+        <button class="btn" id="simrun">Run</button>
+      </div>
+      <div class="simout" id="simout"></div>
+    </div>
+
+    <div class="exportrow">
+      <button class="btn ghost" id="expbrief">Export daily brief (CSV)</button>
+      <button class="btn ghost" id="exprisk">Export top 10 risks (CSV)</button>
+    </div>
+
+    <p class="note">Float and critical values are read straight from what P6 stored for the chosen data date, with no rescheduling, so they match your P6 view. The Exposure Score and the delay simulator are indicative planning aids, not statistical probabilities or a full P6 run. Everything runs in the browser, and no data leaves the device.</p>
+  </div>
+</main>
+
+<footer>This tool is developed by <a class="me" href="https://www.linkedin.com/in/subhashvundavalli" target="_blank" rel="noopener">Vundavalli Subhash</a> using Claude AI.</footer>
+
+<script>
+/* Daily Critical Activity Monitor. Offline P6 XER intelligence.
+   Deterministic engine: parse, model, float/logic/dates, risk, what if. No server, no runtime AI. */
+
+/* 1. XER parser (generic, mapped by header name) */
+function parseXER(text){
+  const lines=text.split(/\r?\n/); const tables={}; let cur=null;
+  for(const ln of lines){
+    if(!ln) continue;
+    const p=ln.split('\t');
+    if(p[0]==='%T'){ cur=p[1]; tables[cur]={fields:[],rows:[]}; }
+    else if(p[0]==='%F' && cur){ tables[cur].fields=p.slice(1); }
+    else if(p[0]==='%R' && cur){ tables[cur].rows.push(p.slice(1)); }
+  }
+  const out={};
+  for(const t in tables){ const f=tables[t].fields; out[t]=tables[t].rows.map(r=>{const o={};f.forEach((k,i)=>o[k]=r[i]);return o;}); }
+  return out;
+}
+function pdate(s){ if(!s) return null; const m=String(s).match(/(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?/); if(!m) return null; return new Date(+m[1],+m[2]-1,+m[3],m[4]?+m[4]:0,m[5]?+m[5]:0); }
+function num(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
+
+/* 2. Activity model and network */
+let MODEL=null, MODE='tf', REF='data', WIN='year', MAXDOWN=1;
+function buildModel(tab){
+  const T=tab.TASK||[], P=tab.TASKPRED||[], PRJ=tab.PROJECT||[];
+  const proj=PRJ[0]||{};
+  const dataDate=pdate(proj.last_recalc_date)||pdate(proj.plan_end_date)||null;
+  const tasks=T.map(r=>({
+    id:r.task_id, code:r.task_code, name:r.task_name||'', status:r.status_code,
+    tfHr:num(r.total_float_hr_cnt),
+    es:pdate(r.early_start_date)||pdate(r.target_start_date)||pdate(r.act_start_date),
+    ef:pdate(r.early_end_date)||pdate(r.target_end_date)||pdate(r.act_end_date),
+    lp:r.driving_path_flag==='Y'
+  }));
+  const byId={}; tasks.forEach(t=>byId[t.id]=t);
+  const succ={}; P.forEach(r=>{ (succ[r.pred_task_id]=succ[r.pred_task_id]||[]).push(r.task_id); });
+  function reach(id){ const seen=new Set(),st=[id]; while(st.length){const x=st.pop();for(const s of (succ[x]||[])){if(!seen.has(s)){seen.add(s);st.push(s);}}} return seen; }
+  let maxd=1; tasks.forEach(t=>{ t.down=reach(t.id).size; if(t.down>maxd) maxd=t.down; });
+  MAXDOWN=maxd;
+  return {proj,dataDate,tasks,byId,succ,reach};
+}
+function hpd(){ return Math.max(1, +document.getElementById('hpd').value||8); }
+function tfDays(t){ return t.tfHr==null?null:t.tfHr/hpd(); }
+function isComplete(t){ return t.status==='TK_Complete'; }
+function isCritical(t){ if(MODE==='lp') return t.lp; const thr=+document.getElementById('thr').value||0; return !isComplete(t) && tfDays(t)!=null && tfDays(t)<=thr; }
+function band(t){ const d=tfDays(t); if(d==null) return null; if(d<=0) return 'crit'; if(d<=5) return 'a5'; if(d<=10) return 'a10'; return t.lp?'lp':null; }
+function refDate(){ return REF==='today'?new Date():(MODEL.dataDate||new Date()); }
+function windowRange(){ const r=refDate(); const y=r.getFullYear(),m=r.getMonth(),d=r.getDate();
+  if(WIN==='day') return [new Date(y,m,d,0,0),new Date(y,m,d,23,59)];
+  if(WIN==='month') return [new Date(y,m,1),new Date(y,m+1,0,23,59)];
+  if(WIN==='year') return [new Date(y,0,1),new Date(y,11,31,23,59)];
+  return [null,null]; }
+function inWindow(t){ const [w0,w1]=windowRange(); if(!w0) return true; if(!t.es&&!t.ef) return false; const s=t.es||t.ef,e=t.ef||t.es; return s<=w1&&e>=w0; }
+const fmt=d=>d?d.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'}):'';
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* 3. Risk engine (transparent Exposure Score) */
+function riskScore(t){
+  if(isComplete(t)) return 0;
+  const tfd=tfDays(t);
+  const fe = (tfd!=null && tfd<=0) ? 40 : (tfd!=null ? 40*Math.max(0,(30-tfd)/30) : 20);
+  const de = 30*(t.down/MAXDOWN);
+  const lp = t.lp?20:0;
+  const st = t.status==='TK_Active'?10:(t.status==='TK_NotStart'?5:0);
+  return Math.round((fe+de+lp+st)*10)/10;
+}
+function priority(s){ return s>=70?['🔴','High','var(--crit)']:(s>=40?['🟠','Medium','var(--a5)']:['🟢','Low','var(--ok)']); }
+function topRisks(n){ return MODEL.tasks.map(t=>({t,s:riskScore(t)})).sort((a,b)=>b.s-a.s).slice(0,n); }
+
+/* 4. Plain language explanation */
+function whyText(t){
+  const tfd=tfDays(t); const parts=[];
+  parts.push('has '+(tfd==null?'no recorded':tfd.toFixed(1))+' day'+(tfd!=null&&Math.abs(tfd)===1?'':'s')+' of total float');
+  if(t.lp) parts.push('sits on the Longest Path');
+  const reachSet=MODEL.reach(t.id);
+  const lt5=[...reachSet].map(id=>MODEL.byId[id]).filter(x=>x&&tfDays(x)!=null&&tfDays(x)<5).length;
+  parts.push('has '+t.down+' downstream activit'+(t.down===1?'y':'ies')+(t.down?(', of which '+lt5+' have less than 5 days of float'):''));
+  const s=riskScore(t); const lvl=s>=70?'high':(s>=40?'moderate':'low');
+  return 'Activity '+esc(t.code)+' '+parts.join('; ')+'. A delay here therefore carries '+lvl+' schedule exposure (score '+s+' out of 100).';
+}
+
+/* rendering */
+function kpi(l,v){ return '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div></div>'; }
+function renderSummary(){
+  const M=MODEL,tot=M.tasks.length;
+  const ns=M.tasks.filter(t=>t.status==='TK_NotStart').length;
+  const ac=M.tasks.filter(t=>t.status==='TK_Active').length;
+  const cp=M.tasks.filter(isComplete).length;
+  const crit=M.tasks.filter(isCritical).length;
+  const floats=M.tasks.map(tfDays).filter(v=>v!=null);
+  const minF=floats.length?Math.min(...floats):null;
+  document.getElementById('summary').innerHTML=
+    kpi('Project',esc(M.proj.proj_short_name||''))+kpi('Data date',fmt(M.dataDate))+
+    kpi('Activities',tot+' <small>('+ns+' NS / '+ac+' active / '+cp+' done)</small>')+
+    kpi('Critical (current definition)',crit)+kpi('Min total float',minF==null?'':minF.toFixed(0)+' <small>days</small>');
+  const h=document.getElementById('health');
+  if(minF!=null&&minF<-30){ h.className='health warn';
+    h.innerHTML='Large negative float detected (min about '+minF.toFixed(0)+' days). This usually means a hard finish constraint or a stale data date is pushing the whole network negative. The <b>Longest Path</b> view is often the truer read of what is critical here.'; }
+  else { h.className='health ok'; h.textContent='Float range looks normal for a live schedule.'; }
+}
+function renderBrief(){
+  const M=MODEL;
+  const crit=M.tasks.filter(isCritical);
+  const near=M.tasks.filter(t=>{const b=band(t);return b==='a5'||b==='a10';});
+  const top=topRisks(1)[0];
+  const b=document.getElementById('brief');
+  if(!top){ b.innerHTML='<div class="bt">TODAY&rsquo;S SCHEDULE BRIEF</div><p>No activities loaded.</p>'; return; }
+  const t=top.t, delay=5, tf=tfDays(t);
+  const exposed=[...M.reach(t.id)].map(id=>M.byId[id]).filter(x=>x&&!isComplete(x)&&x.tfHr!=null&&x.tfHr<delay*hpd()).length;
+  b.innerHTML='<div class="bt">TODAY&rsquo;S SCHEDULE BRIEF · '+fmt(refDate())+'</div><p>'+
+    '<b>'+crit.length+'</b> activit'+(crit.length===1?'y is':'ies are')+' critical and <b>'+near.length+'</b> near critical. '+
+    'The activity carrying the most exposure is <b>'+esc(t.code)+'</b>, '+esc(t.name)+', with '+(tf==null?'no recorded float':tf.toFixed(1)+' days of float')+(t.lp?', and it sits on the Longest Path':'')+'. It has '+t.down+' downstream activities. '+
+    'A delay of '+delay+' days to it would erode the slack of about <b>'+exposed+'</b> of them. '+
+    'The main focus for the day is <b>'+esc(t.code)+'</b> and its immediate successors.</p>';
+}
+function renderRisks(){
+  const rows=topRisks(10);
+  document.getElementById('riskcap').textContent=rows.length+' shown · '+hpd()+' h per day';
+  document.getElementById('riskbody').innerHTML=rows.map((o,i)=>{
+    const t=o.t,[emo,lab,col]=priority(o.s),d=tfDays(t);
+    return '<tr><td class="id">'+(i+1)+'</td><td class="id">'+esc(t.code)+'</td><td>'+esc(t.name)+
+      '</td><td class="tf">'+(d==null?'':d.toFixed(1)+'d')+'</td><td class="tf">'+t.down+'</td><td>'+(t.lp?'<span class="badge b-lp">LP</span>':'')+
+      '</td><td class="tf" style="font-weight:600">'+o.s+'</td><td class="prio" style="color:'+col+'">'+emo+' '+lab+
+      '</td><td><button class="whybtn" data-id="'+esc(t.id)+'">Why?</button></td></tr>';
+  }).join('');
+  document.querySelectorAll('.whybtn').forEach(b=>b.onclick=()=>{
+    const t=MODEL.byId[b.dataset.id]; const w=document.getElementById('whybox');
+    w.style.display='block'; w.innerHTML=whyText(t);
+    w.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+}
+function renderTable(){
+  const rows=MODEL.tasks.filter(t=>MODE==='lp'?t.lp:(band(t)!==null)).filter(inWindow).sort((a,b)=>(tfDays(a)??1e9)-(tfDays(b)??1e9));
+  const [w0,w1]=windowRange();
+  const cap=document.getElementById('tablecap');
+  cap.innerHTML='<span>'+rows.length+' activities'+(w0?(' overlapping '+fmt(w0)+' to '+fmt(w1)):' (all)')+'</span><span>ref: '+(REF==='today'?'today':'data date')+'</span>';
+  document.getElementById('tbody').innerHTML=rows.slice(0,400).map(t=>{
+    const b=band(t),d=tfDays(t);
+    const bd = MODE==='lp'?'<span class="badge b-lp">LP</span>':(b==='crit'?'<span class="badge b-crit">critical</span>':b==='a5'?'<span class="badge b-a5">under 5d</span>':b==='a10'?'<span class="badge b-a10">under 10d</span>':t.lp?'<span class="badge b-lp">LP</span>':'');
+    return '<tr class="'+(isCritical(t)?'crit':'')+'"><td class="id">'+esc(t.code)+'</td><td>'+esc(t.name)+'</td><td class="id">'+fmt(t.es)+'</td><td class="id">'+fmt(t.ef)+'</td><td class="tf">'+(d==null?'':d.toFixed(1)+'d')+'</td><td>'+bd+'</td></tr>';
+  }).join('')||'<tr><td colspan="6" style="color:var(--muted)">No matching activities in this window.</td></tr>';
+}
+function populatePicker(){ document.getElementById('acts').innerHTML=MODEL.tasks.map(t=>'<option value="'+esc(t.code)+' · '+esc(t.name)+'">').join(''); }
+
+/* 5. Delay simulator and dependency chain */
+function findActivity(q){
+  q=q.trim().toLowerCase(); if(!q) return null;
+  return MODEL.tasks.find(x=>(x.code+' · '+x.name).toLowerCase()===q)
+      || MODEL.tasks.find(x=>String(x.code).toLowerCase()===q)
+      || MODEL.tasks.find(x=>x.name.toLowerCase().includes(q));
+}
+function chainLevels(startId,maxLvl,maxPer){
+  const levels=[[startId]]; let frontier=[startId]; const seen=new Set([startId]);
+  for(let l=0;l<maxLvl;l++){ const next=[]; frontier.forEach(id=>{ (MODEL.succ[id]||[]).forEach(s=>{ if(!seen.has(s)){seen.add(s);next.push(s);} }); });
+    if(!next.length) break; levels.push(next.slice(0,maxPer)); frontier=next; }
+  return levels;
+}
+function nodeCard(id){
+  const t=MODEL.byId[id]; if(!t) return '';
+  const b=band(t); const cls=b==='crit'?'crit':b==='a5'?'a5':b==='a10'?'a10':''; const d=tfDays(t);
+  return '<div class="node '+cls+'"><span class="nc">'+esc(t.code)+'</span><span class="nn">'+esc(t.name)+'</span><span class="nf">float '+(d==null?'na':d.toFixed(1)+'d')+(t.lp?' · LP':'')+'</span></div>';
+}
+function runSim(){
+  const t=findActivity(document.getElementById('simpick').value);
+  const delay=+document.getElementById('simdelay').value||0;
+  const out=document.getElementById('simout');
+  if(!t){ out.innerHTML='<div class="simverdict">No matching activity. Pick one from the list.</div>'; return; }
+  const reachSet=[...MODEL.reach(t.id)].map(id=>MODEL.byId[id]).filter(Boolean);
+  const thrHr=delay*hpd();
+  const affected=reachSet.filter(x=>!isComplete(x)&&x.tfHr!=null&&x.tfHr<thrHr).sort((a,b)=>a.tfHr-b.tfHr);
+  const critExposed=affected.filter(x=>tfDays(x)<=0).length;
+  const lpAffected=affected.filter(x=>x.lp).length;
+  const minFloat=reachSet.length?Math.min(...reachSet.map(x=>tfDays(x)).filter(v=>v!=null)):null;
+  let html='<div class="simverdict">Delaying <b>'+esc(t.code)+'</b> by '+delay+' days would erode the slack of <b>'+affected.length+'</b> of its '+reachSet.length+' downstream activities.</div>';
+  html+='<div class="metrics">'+
+    '<div class="metric"><div class="l">Downstream</div><div class="v">'+reachSet.length+'</div></div>'+
+    '<div class="metric hot"><div class="l">Float exceeded</div><div class="v">'+affected.length+'</div></div>'+
+    '<div class="metric hot"><div class="l">Critical exposed</div><div class="v">'+critExposed+'</div></div>'+
+    '<div class="metric"><div class="l">Longest Path hit</div><div class="v">'+lpAffected+'</div></div>'+
+    '<div class="metric"><div class="l">Min downstream float</div><div class="v">'+(minFloat==null?'':minFloat.toFixed(1)+'d')+'</div></div></div>';
+  const levels=chainLevels(t.id,4,6);
+  html+='<div class="lvlhdr" style="margin-top:6px">Dependency chain (first '+(levels.length-1)+' levels)</div><div class="chain">';
+  levels.forEach((lvl,i)=>{ if(i) html+='<div class="arrow">&rarr;</div>'; html+='<div class="level"><div class="lvlhdr">'+(i===0?'Selected':'Level '+i)+'</div>'+lvl.map(nodeCard).join('')+'</div>'; });
+  html+='</div>';
+  if(affected.length){
+    html+='<div class="lvlhdr" style="margin-top:14px">Float deficit for affected activities</div>';
+    html+='<div class="tablewrap card" style="margin-top:6px"><div class="scroll"><table><thead><tr><th>Activity</th><th>Name</th><th class="r">Current float</th><th class="r">Delay</th><th class="r">Deficit</th></tr></thead><tbody>';
+    html+=affected.slice(0,30).map(x=>{const cf=tfDays(x);const def=delay-cf;return '<tr><td class="id">'+esc(x.code)+'</td><td>'+esc(x.name)+'</td><td class="tf">'+cf.toFixed(1)+'d</td><td class="tf">'+delay+'d</td><td class="tf" style="color:var(--crit);font-weight:600">'+def.toFixed(1)+'d</td></tr>';}).join('');
+    html+='</tbody></table></div></div>'+(affected.length>30?'<div class="note">showing first 30 of '+affected.length+'</div>':'');
+  }
+  out.innerHTML=html;
+}
+
+/* 6. CSV export (offline) */
+function download(name,text){ const blob=new Blob([text],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+function csvCell(s){ s=String(s==null?'':s); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
+function exportRisks(){
+  const rows=topRisks(10);
+  let csv='Rank,Activity ID,Name,Float (days),Downstream,Longest Path,Exposure Score,Priority\n';
+  rows.forEach((o,i)=>{const t=o.t,d=tfDays(t),[,lab]=priority(o.s);
+    csv+=[i+1,t.code,t.name,(d==null?'':d.toFixed(1)),t.down,(t.lp?'Y':'N'),o.s,lab].map(csvCell).join(',')+'\n';});
+  download('top_10_schedule_risks.csv',csv);
+}
+function exportBrief(){
+  const crit=MODEL.tasks.filter(isCritical);
+  let csv='Field,Value\n';
+  csv+=['Project',MODEL.proj.proj_short_name||''].map(csvCell).join(',')+'\n';
+  csv+=['Data date',fmt(MODEL.dataDate)].map(csvCell).join(',')+'\n';
+  csv+=['Critical activities',crit.length].map(csvCell).join(',')+'\n';
+  csv+='\nActivity ID,Name,Float (days),Longest Path\n';
+  crit.sort((a,b)=>(tfDays(a)??0)-(tfDays(b)??0)).forEach(t=>{const d=tfDays(t);
+    csv+=[t.code,t.name,(d==null?'':d.toFixed(1)),(t.lp?'Y':'N')].map(csvCell).join(',')+'\n';});
+  download('daily_brief.csv',csv);
+}
+
+/* 7. Gantt / programme timeline */
+let GANTTF='top10';
+function ganttSet(){
+  if(GANTTF==='top10') return topRisks(10).map(o=>o.t);
+  if(GANTTF==='crit') return MODEL.tasks.filter(isCritical);
+  if(GANTTF==='near') return MODEL.tasks.filter(t=>{const b=band(t);return b==='a5'||b==='a10';});
+  return MODEL.tasks.slice();
+}
+function renderGantt(){
+  const g=document.getElementById('gantt');
+  const set=ganttSet().filter(t=>t.es&&t.ef).sort((a,b)=>a.es-b.es);
+  const total=set.length, capped=set.slice(0,120);
+  if(!capped.length){ g.innerHTML='<div style="padding:16px;color:var(--muted);font-family:var(--mono);font-size:12px">No dated activities in this view.</div>'; return; }
+  const min=new Date(Math.min(...capped.map(t=>+t.es))), max=new Date(Math.max(...capped.map(t=>+t.ef)));
+  const span=Math.max(1,max-min);
+  const pct=d=>Math.max(0,Math.min(100,(d-min)/span*100));
+  let ticks='';
+  const showMonths=(max-min)<(1000*60*60*24*365*3);
+  for(let y=min.getFullYear();y<=max.getFullYear();y++){
+    const jan=new Date(y,0,1); if(jan>=min&&jan<=max) ticks+='<span class="tick" style="left:'+pct(jan)+'%">'+y+'</span>';
+    if(showMonths) for(let m=0;m<12;m++){const d=new Date(y,m,1); if(d>=min&&d<=max) ticks+='<span class="tickm" style="left:'+pct(d)+'%"></span>';}
+  }
+  const dd=MODEL.dataDate;
+  const marker=(dd&&dd>=min&&dd<=max)?'linear-gradient(90deg,transparent calc('+pct(dd)+'% - 1px),var(--ink) calc('+pct(dd)+'% - 1px),var(--ink) calc('+pct(dd)+'% + 1px),transparent calc('+pct(dd)+'% + 1px))':'none';
+  let html='<div class="grow ghead"><div class="glabel">Activity</div><div class="gaxis">'+ticks+'</div></div><div class="grows">';
+  capped.forEach(t=>{
+    const b=band(t); const cls=b==='crit'?'crit':b==='a5'?'a5':b==='a10'?'a10':t.lp?'lp':'norm';
+    const l=pct(t.es), w=Math.max(0.5,pct(t.ef)-pct(t.es));
+    const tip=esc(t.code)+' '+esc(t.name)+' | '+fmt(t.es)+' to '+fmt(t.ef)+' | float '+(tfDays(t)==null?'na':tfDays(t).toFixed(1)+'d');
+    html+='<div class="grow"><div class="glabel" title="'+tip+'">'+esc(t.code)+' <span class="gl2">'+esc(t.name)+'</span></div>'+
+      '<div class="gtrack" style="background:'+marker+'"><div class="gbar '+cls+'" data-code="'+esc(t.code)+'" title="'+tip+'" style="left:'+l+'%;width:'+w+'%"></div></div></div>';
+  });
+  html+='</div>';
+  if(total>120) html+='<div style="padding:8px 12px;color:var(--muted);font-family:var(--mono);font-size:11px">showing first 120 of '+total+' by start date</div>';
+  g.innerHTML=html;
+  g.querySelectorAll('.gbar').forEach(bar=>bar.onclick=()=>{
+    const t=MODEL.tasks.find(x=>x.code===bar.dataset.code); if(!t) return;
+    document.getElementById('simpick').value=t.code+' · '+t.name; runSim();
+    document.getElementById('simout').scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+}
+
+/* refresh and events */
+function refresh(){ if(!MODEL) return; renderSummary(); renderBrief(); renderRisks(); renderTable(); renderGantt(); }
+function loadText(text){
+  const tab=parseXER(text);
+  if(!tab.TASK){ alert('No TASK table found. Is this a valid P6 .xer export?'); return; }
+  MODEL=buildModel(tab);
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('dropzone').classList.add('hidden');
+  populatePicker(); refresh();
+}
+function readFile(f){ const rd=new FileReader(); rd.onload=e=>{ let text; try{text=new TextDecoder('windows-1252').decode(e.target.result);}catch(_){text=new TextDecoder('utf-8').decode(e.target.result);} loadText(text); }; rd.readAsArrayBuffer(f); }
+const dz=document.getElementById('dropzone'), fi=document.getElementById('filein');
+dz.onclick=()=>fi.click();
+dz.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')fi.click();};
+fi.onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0]); };
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);});
+document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#mode button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');MODE=b.dataset.mode;document.getElementById('thrctl').style.opacity=MODE==='tf'?'1':'.4';refresh();});
+document.querySelectorAll('#refmode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#refmode button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');REF=b.dataset.ref;refresh();});
+document.querySelectorAll('#windowtabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#windowtabs button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');WIN=b.dataset.win;renderTable();});
+document.getElementById('thr').oninput=refresh;
+document.getElementById('hpd').oninput=refresh;
+document.getElementById('simrun').onclick=runSim;
+document.getElementById('expbrief').onclick=exportBrief;
+document.getElementById('exprisk').onclick=exportRisks;
+document.querySelectorAll('#ganttfilter button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#ganttfilter button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');GANTTF=b.dataset.g;renderGantt();});
+</script>
+</body>
+</html>
