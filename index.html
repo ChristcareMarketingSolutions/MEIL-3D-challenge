@@ -18,24 +18,71 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--paper);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5}
   .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
-  header{background:var(--ink);color:#E6F2F0;background-image:linear-gradient(rgba(14,74,70,.94),rgba(14,74,70,.94)),
-    repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),
-    repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px)}
-  header .wrap{padding:30px 20px 28px}
-  h1{font-family:var(--sans);font-weight:700;font-size:clamp(24px,4vw,34px);margin:0;color:#fff;letter-spacing:-.02em}
-  main{padding:24px 0 50px}
+  header{position:fixed;top:0;left:0;right:0;z-index:1000;isolation:isolate;overflow:visible;color:#fff;background:#0B3F3B;height:88px}
+  .header-glow{position:absolute;inset:0;z-index:-1;pointer-events:none;filter:blur(42px);opacity:.92;clip-path:inset(0 -25% 0 -25%);
+    background:linear-gradient(90deg,#5E2BFF 0%,#008DFF 12%,#00D4C7 24%,#28E68C 36%,#D7EF4A 48%,#FFD166 60%,#FF7A59 72%,#FF4FA3 84%,#9A5CFF 100%);
+    background-size:200% 100%;background-position:0% 50%;transform:translate3d(0,0,0) scale(1.08)}
+  header:after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:rgba(8,35,33,.30)}
+  header .wrap{padding:18px 20px}
+  .header-inner{display:flex;align-items:center;gap:12px;position:relative;z-index:2;min-height:52px}
+  .header-menu{flex:0 0 auto}
+  .header-menu .menu{margin:0}
+  .header-menubtn{border:0;background:transparent;color:#fff;border-radius:0;padding:0;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;font-size:22px;line-height:1;width:22px;height:22px;display:grid;place-items:center}
+  .header-menubtn:hover{border:0;background:transparent;color:#fff}
+  .header-menupanel{top:calc(100% + 10px);left:0;z-index:2000;min-width:220px;background:rgba(255,255,255,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  h1{font-family:var(--sans);font-weight:700;font-size:clamp(24px,4vw,34px);margin:0;color:#fff;letter-spacing:-.02em;text-shadow:0 2px 18px rgba(0,0,0,.18)}
+  main{padding:110px 0 50px;position:relative;z-index:1}
 
-  .drop{border:1.5px dashed var(--line);border-radius:8px;background:var(--surface);padding:34px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+  .menu{position:relative;display:inline-block;margin:0 0 16px}
+  .menubtn{font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:9px 15px}
+  .menubtn:hover{border-color:var(--ink)}
+  .menupanel{position:absolute;top:calc(100% + 6px);left:0;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 26px rgba(14,48,44,.16);padding:6px;min-width:200px;display:flex;flex-direction:column;gap:2px}
+  .menupanel[hidden]{display:none}
+  /* Header menu is icon-only: no white box, border or padding. */
+  header .menubtn.header-menubtn,
+  header .menubtn.header-menubtn:hover,
+  header .menubtn.header-menubtn:focus{
+    border:0!important;
+    background:transparent!important;
+    color:#fff!important;
+    padding:0!important;
+    margin:0!important;
+    box-shadow:none!important;
+    outline-offset:3px;
+  }
+
+  .mitem{font-family:var(--sans);font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;border:0;background:none;color:var(--ink);border-radius:5px;padding:9px 12px;text-decoration:none;display:block}
+  .mitem:hover{background:var(--paper)}
+  .mitem.wa{color:#178045;font-weight:700}
+
+  .drop{margin-top:0;border:1.5px dashed var(--line);border-radius:8px;background:var(--surface);padding:34px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
   .drop:hover,.drop.over{border-color:var(--ink);background:#F6FAF9}
-  .drop .big{font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink)}
+
+  /* Initial upload screen: center the drop zone itself in the viewport. */
+  body.initial-screen #dropzone{
+    position:fixed!important;
+    top:50%!important;
+    left:50%!important;
+    transform:translate(-50%,-50%)!important;
+    width:min(80%,900px);
+    margin:0!important;
+    z-index:1001;
+  }
+
+  .drop .big{font-family:var(--sans);font-weight:700;font-size:17px;color:var(--ink)}
   .drop .small{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px}
 
   .hidden{display:none}
-  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:20px 0}
+  /* Loaded application: clear the fixed 88px header independently of main. */
+  header + main #app:not(.hidden){
+    padding-top:100px;
+  }
+
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:6px 0 20px}
   .kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:13px 15px}
   .kpi .l{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--muted)}
   .kpi .v{font-family:var(--sans);font-weight:700;font-size:21px;color:var(--ink);margin-top:3px}
-  .kpi .v small{font-weight:500;font-size:12px;color:var(--muted)}
+  .kpi .v small{font-weight:400;font-size:12px;color:var(--muted)}
 
   .health{border-radius:6px;padding:12px 15px;font-size:13.5px;margin:4px 0 16px}
   .health.warn{background:var(--crit-bg);border:1px solid #E7C3BD;color:#7A241B}
@@ -43,6 +90,19 @@
 
   h2{font-family:var(--sans);font-size:15px;color:var(--ink);margin:26px 0 10px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:6px}
+
+  .searchcard{padding:16px}
+  #detail{margin-top:14px}
+  .dmsg{color:var(--muted);font-size:13px}
+  .dcard{border:1px solid var(--line-soft);border-left:4px solid var(--lp);border-radius:5px;padding:14px 16px;background:#F8FBFB}
+  .dhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .dcode{font-weight:700;font-size:16px;color:var(--ink)}
+  .dprio{font-size:12.5px;font-weight:700}
+  .dname{color:#33443f;font-size:14px;margin:2px 0 12px}
+  .dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+  .dc .dl{font-size:10.5px;color:var(--muted)}
+  .dc .dv{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .dwhy{font-size:13px;line-height:1.5;color:#3a4a45;background:#fff;border:1px solid var(--line-soft);border-radius:4px;padding:10px 12px;margin-bottom:12px}
 
   .brief{padding:18px 20px;border-left:4px solid var(--ink)}
   .brief .bt{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--muted);margin-bottom:8px}
@@ -58,32 +118,31 @@
   input[type=number]{font-family:var(--mono);font-size:13px;padding:7px 9px;border:1px solid var(--line);border-radius:5px}
 
   .windowtabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
-  .windowtabs button{font-family:var(--sans);font-weight:600;font-size:13.5px;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:5px;cursor:pointer}
+  .windowtabs button{font-family:var(--sans);font-weight:700;font-size:13.5px;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:5px;cursor:pointer}
   .windowtabs button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
 
   .tablewrap{overflow:hidden}
   .cap{font-family:var(--mono);font-size:12px;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line-soft)}
-  th{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--muted);font-weight:500;background:#F5F8F7;position:sticky;top:0}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--muted);font-weight:700;background:#F5F8F7;position:sticky;top:0}
   td.id,td.tf{font-family:var(--mono);font-size:12px;white-space:nowrap}
   td.tf,th.r{text-align:right}
   .scroll{max-height:420px;overflow:auto}
   .badge{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:3px;white-space:nowrap}
   .b-crit{background:var(--crit-bg);color:var(--crit)} .b-a5{background:var(--a5-bg);color:var(--a5)}
   .b-a10{background:var(--a10-bg);color:var(--a10)} .b-lp{background:var(--lp-bg);color:var(--lp)}
-  tr.crit td.tf{color:var(--crit);font-weight:600}
-  .prio{font-family:var(--mono);font-size:11px;font-weight:500;white-space:nowrap}
+  tr.crit td.tf{color:var(--crit);font-weight:700}
+  .prio{font-family:var(--mono);font-size:11px;font-weight:700;white-space:nowrap}
   .whybtn{font-family:var(--mono);font-size:11px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:3px;padding:2px 8px}
   .whybtn:hover{border-color:var(--ink)}
   #whybox{margin-top:10px;padding:12px 14px;border:1px solid var(--line-soft);border-left:3px solid var(--lp);border-radius:4px;background:#F6FBFB;font-size:13.5px;color:var(--text);display:none}
 
   .sim{padding:16px}
-  .sim h3{font-family:var(--sans);font-size:16px;margin:0 0 4px;color:var(--ink)}
   .sim p.desc{font-size:13px;color:var(--muted);margin:0 0 14px}
   .simrow{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
   input[type=text]{font-family:var(--sans);font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:5px;min-width:260px}
-  .btn{font-family:var(--sans);font-weight:600;font-size:14px;cursor:pointer;border-radius:5px;padding:9px 16px;border:1px solid var(--ink);background:var(--ink);color:#fff}
+  .btn{font-family:var(--sans);font-weight:700;font-size:14px;cursor:pointer;border-radius:5px;padding:9px 16px;border:1px solid var(--ink);background:var(--ink);color:#fff}
   .btn.ghost{background:var(--surface);color:var(--ink)}
   .simout{margin-top:16px}
   .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:12px 0}
@@ -91,7 +150,7 @@
   .metric .l{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
   .metric .v{font-family:var(--sans);font-weight:700;font-size:18px;color:var(--ink)}
   .metric.hot .v{color:var(--crit)}
-  .simverdict{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);margin-bottom:4px}
+  .simverdict{font-family:var(--sans);font-weight:700;font-size:15px;color:var(--ink);margin-bottom:4px}
   .simverdict b{color:var(--crit)}
 
   .chain{display:flex;gap:6px;overflow-x:auto;padding:12px 2px;align-items:flex-start}
@@ -101,10 +160,9 @@
   .node.crit{border-left-color:var(--crit);background:var(--crit-bg)}
   .node.a5{border-left-color:var(--a5);background:var(--a5-bg)}
   .node.a10{border-left-color:var(--a10)}
-  .node .nc{font-family:var(--mono);font-weight:600;color:var(--ink)}
+  .node .nc{font-family:var(--mono);font-weight:700;color:var(--ink)}
   .node .nn{color:#42525f;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .node .nf{font-family:var(--mono);font-size:10px;color:var(--muted)}
-  .arrow{align-self:center;color:var(--muted);font-size:16px;padding-top:22px}
 
   details.method{margin:8px 0 0;font-size:13px}
   details.method summary{cursor:pointer;font-family:var(--mono);font-size:11.5px;color:var(--lp)}
@@ -119,32 +177,84 @@
   .gaxis{position:relative;height:30px}
   .gaxis .tick{position:absolute;top:9px;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--muted)}
   .gaxis .tickm{position:absolute;top:0;bottom:0;width:1px;background:var(--line-soft)}
-  .grows{max-height:460px;overflow:auto}
+  .grows{max-height:460px;overflow:auto;position:relative}
   .grows .grow{height:22px;border-bottom:1px solid #EAF1EF}
   .gtrack{position:relative;height:100%}
   .gbar{position:absolute;top:5px;height:12px;border-radius:2px;cursor:pointer;background:#8FA6A2;min-width:2px}
   .gbar.crit{background:var(--crit)} .gbar.a5{background:var(--a5)} .gbar.a10{background:var(--a10)} .gbar.lp{background:var(--lp)} .gbar.norm{background:#8FA6A2}
-  .gbar:hover{outline:1px solid var(--ink)}
+  .gbar:hover{outline:2px solid var(--ink)}
   .glegend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted);margin:8px 0 2px}
   .glegend span{display:inline-flex;align-items:center;gap:5px}
   .glegend i{width:12px;height:8px;border-radius:2px;display:inline-block}
 
   .note{font-family:var(--mono);font-size:11.5px;color:var(--muted);border-left:2px solid var(--line);padding-left:12px;line-height:1.5;margin-top:22px}
   footer{text-align:center;padding:20px 20px 36px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-top:1px solid var(--line-soft);margin-top:30px}
-  footer .me{color:var(--lp);font-weight:600;text-decoration:none;border-bottom:1px solid var(--lp)}
+  /* Initial upload screen: credit line directly beneath the centered drop zone. */
+  body.initial-screen footer{
+    position:fixed;
+    left:50%;
+    top:calc(50% + 82px);
+    transform:translateX(-50%);
+    width:min(90%,1120px);
+    margin:0;
+    padding:0 20px;
+    border-top:0;
+    z-index:2;
+    text-align:center;
+  }
+
+  footer .me{color:var(--lp);font-weight:700;text-decoration:none;border-bottom:1px solid var(--lp)}
   footer .me:hover{color:var(--ink);border-bottom-color:var(--ink)}
+
+  .modal{position:fixed;inset:0;background:rgba(14,48,44,.5);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;z-index:50;overflow:auto}
+  .modal[hidden]{display:none}
+  .modalbox{background:#fff;max-width:700px;width:100%;border-radius:8px;padding:26px 28px;position:relative}
+  .modalbox h3{color:var(--ink);font-size:19px;margin:0 0 6px}
+  .modalbox h4{color:var(--lp);font-size:13.5px;margin:14px 0 3px}
+  .modalbox p{font-size:13.5px;line-height:1.55;color:#33443f;margin:0}
+  .mclose{position:absolute;top:16px;right:16px;font-family:var(--sans);font-weight:700;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:5px;padding:6px 12px}
+  .global-search-box{max-width:760px}
+  .global-search-row{display:flex;gap:10px;margin-top:18px}
+  .global-search-row input{flex:1;min-width:0;font-family:var(--sans);font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:6px}
+  .global-search-results{margin-top:16px;display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto}
+  .gresult{border:1px solid var(--line-soft);border-left:3px solid var(--lp);border-radius:6px;background:#F8FBFB;padding:10px 12px;cursor:pointer}
+  .gresult:hover{border-color:var(--lp);background:#F2F9F8}
+  .gresult .gt{font-weight:700;color:var(--ink);font-size:13.5px}
+  .gresult .gs{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+  .gresult mark{background:#FFF0A8;color:inherit;padding:0 2px;border-radius:2px}
+  @media(max-width:640px){.header-inner{align-items:center}.header-menupanel{position:absolute;left:0;right:auto;top:calc(100% + 10px)}.global-search-row{flex-direction:column}}
+
+  @media print{
+    .menu,.whybtn,.btn,.exportrow,.modal,.controls,.windowtabs,.drop{display:none!important}
+    .scroll{max-height:none!important;overflow:visible!important}
+    body{background:#fff}
+    header{position:static;color:#0E4A46}
+  }
 </style>
 </head>
-<body>
-<header>
-  <div class="wrap">
+<body class="initial-screen">
+<header id="siteHeader">
+  <div class="header-glow" aria-hidden="true"></div>
+  <div class="wrap header-inner">
+    <div class="header-menu">
+      <div class="menu">
+        <button class="menubtn header-menubtn" id="menutoggle" aria-expanded="false" aria-label="Open menu">☰</button>
+        <div class="menupanel header-menupanel" id="menupanel" hidden>
+          <button class="mitem" id="btnGlobalSearch">Search</button>
+          <button class="mitem" id="btnhelp">How it works</button>
+          <button class="mitem" id="btnreset">Load new file</button>
+          <button class="mitem" id="btnprint">Print or save PDF</button>
+          <a class="mitem wa" href="https://wa.me/918186916048" target="_blank" rel="noopener">Contact</a>
+        </div>
+      </div>
+    </div>
     <h1>Daily Critical Activity Monitor</h1>
   </div>
 </header>
 
 <main class="wrap">
   <div id="dropzone" class="drop" tabindex="0" role="button" aria-label="Upload XER file">
-    <div class="big">Drop your P6 export file here, or click to choose</div>
+    <div class="big">Drop P6 exported file here, or click to choose</div>
     <div class="small">Reads Primavera P6 XER exports. Everything runs on this device.</div>
     <input type="file" id="filein" accept=".xer" hidden>
   </div>
@@ -152,6 +262,15 @@
   <div id="app" class="hidden">
     <div class="summary" id="summary"></div>
     <div id="health"></div>
+
+    <h2>Find an activity</h2>
+    <div class="card searchcard">
+      <div class="simrow">
+        <input type="text" id="actsearch" list="acts" placeholder="type an activity ID or name">
+        <button class="btn" id="btnsearch">Search</button>
+      </div>
+      <div id="detail"></div>
+    </div>
 
     <h2>Today's schedule brief</h2>
     <div class="card brief" id="brief"></div>
@@ -171,7 +290,7 @@
         Downstream Exposure (0 to 30): scaled by successor count divided by the largest successor network in the file.<br>
         Longest Path Factor: adds 20 when P6 flags the activity on the driving path.<br>
         Status Factor: adds 10 when in progress, 5 when not started, 0 when complete.<br>
-        Priority: 🔴 High 70 and above · 🟠 Medium 40 to 69 · 🟢 Low below 40.</div>
+        Priority: High 70 and above, Medium 40 to 69, Low below 40.</div>
     </details>
 
     <h2>Critical and near critical activities</h2>
@@ -219,11 +338,11 @@
       <span>Dashed line marks the data date</span>
     </div>
     <div class="gantt"><div id="gantt"></div></div>
-    <div class="note" style="margin-top:6px">Bars use early (planned) dates. Click any bar to load it into the simulator. Planned versus current comparison arrives with the Baseline module.</div>
+    <div class="note" style="margin-top:6px">Bars use early (planned) dates. Click any bar to open that activity's detail. Planned versus current comparison arrives with the Baseline module.</div>
 
     <h2>Delay simulator</h2>
     <div class="card sim">
-      <p class="desc">Pick an activity and a delay. The tool walks its successor chain and reports which downstream activities would lose their slack. This is an indicative float consumption estimate, not a full reschedule in P6.</p>
+      <p class="desc">Pick an activity and a delay. The tool walks its successor chain and reports which downstream activities still had slack and would lose it. This is an indicative float consumption estimate, not a full reschedule in P6.</p>
       <div class="simrow">
         <div class="ctl"><span class="lab">Activity (type an ID or name)</span>
           <input type="text" id="simpick" list="acts" placeholder="start typing an activity">
@@ -243,22 +362,50 @@
   </div>
 </main>
 
+<div class="modal global-search-modal" id="globalsearchmodal" hidden>
+  <div class="modalbox global-search-box">
+    <button class="mclose" id="btnGlobalSearchClose">Close</button>
+    <h3>Global search</h3>
+    <p>Search activities, sections, controls, help text and other content on this page.</p>
+    <div class="global-search-row">
+      <input type="text" id="globalsearchinput" placeholder="Search the website…" autocomplete="off">
+      <button class="btn" id="btnGlobalSearchRun">Search</button>
+    </div>
+    <div id="globalsearchresults" class="global-search-results">
+      <div class="dmsg">Start typing to search.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="helpmodal" hidden>
+  <div class="modalbox">
+    <button class="mclose" id="btnhelpclose">Close</button>
+    <h3>How it works</h3>
+    <p>A quick guide to each part of the tool.</p>
+    <h4>Loading a file</h4><p>Drop a Primavera P6 XER export onto the page. It is read on your own device and nothing is uploaded anywhere.</p>
+    <h4>Summary and health</h4><p>The top row shows the project, its data date, activity counts and the current critical count. The health line warns when large negative float points to a hard finish constraint or a stale data date.</p>
+    <h4>Find an activity</h4><p>Search by ID or name to open a full detail card for any activity: its float, dates, downstream size, risk score and a plain reason. Clicking a bar in the timeline opens the same card.</p>
+    <h4>Today's schedule brief</h4><p>A short written summary of what is critical, what is near critical, and the activity carrying the most exposure.</p>
+    <h4>Top 10 schedule risks</h4><p>Activities ranked by a Schedule Exposure Score built from float, downstream size, longest path and status. Open the methodology for the formula, and press Why on any row for a plain reason.</p>
+    <h4>Critical and near critical</h4><p>Lists critical and near critical activities. Choose the definition, total float or longest path, and the window: day, month or year.</p>
+    <h4>Programme timeline</h4><p>A Gantt of the activities coloured by criticality, with the data date marked. Click a bar to open that activity.</p>
+    <h4>Delay simulator</h4><p>Pick an activity and a delay to see how many downstream activities would lose their remaining slack. It is an indicative estimate, not a P6 reschedule.</p>
+    <h4>Export and print</h4><p>Save the brief or the top 10 as CSV, or use Print to save the whole view as a PDF.</p>
+  </div>
+</div>
+
 <footer>This tool is developed by <a class="me" href="https://www.linkedin.com/in/subhashvundavalli" target="_blank" rel="noopener">Vundavalli Subhash</a> using Claude AI.</footer>
 
 <script>
 /* Daily Critical Activity Monitor. Offline P6 XER intelligence.
    Deterministic engine: parse, model, float/logic/dates, risk, what if. No server, no runtime AI. */
 
-/* 1. XER parser (generic, mapped by header name) */
 function parseXER(text){
   const lines=text.split(/\r?\n/); const tables={}; let cur=null;
-  for(const ln of lines){
-    if(!ln) continue;
-    const p=ln.split('\t');
+  for(const ln of lines){ if(!ln) continue; const p=ln.split('\t');
     if(p[0]==='%T'){ cur=p[1]; tables[cur]={fields:[],rows:[]}; }
     else if(p[0]==='%F' && cur){ tables[cur].fields=p.slice(1); }
-    else if(p[0]==='%R' && cur){ tables[cur].rows.push(p.slice(1)); }
-  }
+    else if(p[0]==='%R' && cur){ tables[cur].rows.push(p.slice(1)); } }
   const out={};
   for(const t in tables){ const f=tables[t].fields; out[t]=tables[t].rows.map(r=>{const o={};f.forEach((k,i)=>o[k]=r[i]);return o;}); }
   return out;
@@ -266,19 +413,16 @@ function parseXER(text){
 function pdate(s){ if(!s) return null; const m=String(s).match(/(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?/); if(!m) return null; return new Date(+m[1],+m[2]-1,+m[3],m[4]?+m[4]:0,m[5]?+m[5]:0); }
 function num(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
 
-/* 2. Activity model and network */
 let MODEL=null, MODE='tf', REF='data', WIN='year', MAXDOWN=1;
 function buildModel(tab){
   const T=tab.TASK||[], P=tab.TASKPRED||[], PRJ=tab.PROJECT||[];
   const proj=PRJ[0]||{};
   const dataDate=pdate(proj.last_recalc_date)||pdate(proj.plan_end_date)||null;
-  const tasks=T.map(r=>({
-    id:r.task_id, code:r.task_code, name:r.task_name||'', status:r.status_code,
+  const tasks=T.map(r=>({ id:r.task_id, code:r.task_code, name:r.task_name||'', status:r.status_code,
     tfHr:num(r.total_float_hr_cnt),
     es:pdate(r.early_start_date)||pdate(r.target_start_date)||pdate(r.act_start_date),
     ef:pdate(r.early_end_date)||pdate(r.target_end_date)||pdate(r.act_end_date),
-    lp:r.driving_path_flag==='Y'
-  }));
+    lp:r.driving_path_flag==='Y' }));
   const byId={}; tasks.forEach(t=>byId[t.id]=t);
   const succ={}; P.forEach(r=>{ (succ[r.pred_task_id]=succ[r.pred_task_id]||[]).push(r.task_id); });
   function reach(id){ const seen=new Set(),st=[id]; while(st.length){const x=st.pop();for(const s of (succ[x]||[])){if(!seen.has(s)){seen.add(s);st.push(s);}}} return seen; }
@@ -300,8 +444,8 @@ function windowRange(){ const r=refDate(); const y=r.getFullYear(),m=r.getMonth(
 function inWindow(t){ const [w0,w1]=windowRange(); if(!w0) return true; if(!t.es&&!t.ef) return false; const s=t.es||t.ef,e=t.ef||t.es; return s<=w1&&e>=w0; }
 const fmt=d=>d?d.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'}):'';
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function statusText(s){ return s==='TK_Complete'?'Complete':s==='TK_Active'?'In progress':s==='TK_NotStart'?'Not started':(s||''); }
 
-/* 3. Risk engine (transparent Exposure Score) */
 function riskScore(t){
   if(isComplete(t)) return 0;
   const tfd=tfDays(t);
@@ -311,10 +455,9 @@ function riskScore(t){
   const st = t.status==='TK_Active'?10:(t.status==='TK_NotStart'?5:0);
   return Math.round((fe+de+lp+st)*10)/10;
 }
-function priority(s){ return s>=70?['🔴','High','var(--crit)']:(s>=40?['🟠','Medium','var(--a5)']:['🟢','Low','var(--ok)']); }
+function priority(s){ return s>=70?['High','var(--crit)']:(s>=40?['Medium','var(--a5)']:['Low','var(--ok)']); }
 function topRisks(n){ return MODEL.tasks.map(t=>({t,s:riskScore(t)})).sort((a,b)=>b.s-a.s).slice(0,n); }
 
-/* 4. Plain language explanation */
 function whyText(t){
   const tfd=tfDays(t); const parts=[];
   parts.push('has '+(tfd==null?'no recorded':tfd.toFixed(1))+' day'+(tfd!=null&&Math.abs(tfd)===1?'':'s')+' of total float');
@@ -326,7 +469,6 @@ function whyText(t){
   return 'Activity '+esc(t.code)+' '+parts.join('; ')+'. A delay here therefore carries '+lvl+' schedule exposure (score '+s+' out of 100).';
 }
 
-/* rendering */
 function kpi(l,v){ return '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div></div>'; }
 function renderSummary(){
   const M=MODEL,tot=M.tasks.length;
@@ -353,27 +495,26 @@ function renderBrief(){
   const b=document.getElementById('brief');
   if(!top){ b.innerHTML='<div class="bt">TODAY&rsquo;S SCHEDULE BRIEF</div><p>No activities loaded.</p>'; return; }
   const t=top.t, delay=5, tf=tfDays(t);
-  const exposed=[...M.reach(t.id)].map(id=>M.byId[id]).filter(x=>x&&!isComplete(x)&&x.tfHr!=null&&x.tfHr<delay*hpd()).length;
+  const exposed=[...M.reach(t.id)].map(id=>M.byId[id]).filter(x=>x&&!isComplete(x)&&x.tfHr!=null&&x.tfHr>=0&&x.tfHr<delay*hpd()).length;
   b.innerHTML='<div class="bt">TODAY&rsquo;S SCHEDULE BRIEF · '+fmt(refDate())+'</div><p>'+
     '<b>'+crit.length+'</b> activit'+(crit.length===1?'y is':'ies are')+' critical and <b>'+near.length+'</b> near critical. '+
     'The activity carrying the most exposure is <b>'+esc(t.code)+'</b>, '+esc(t.name)+', with '+(tf==null?'no recorded float':tf.toFixed(1)+' days of float')+(t.lp?', and it sits on the Longest Path':'')+'. It has '+t.down+' downstream activities. '+
-    'A delay of '+delay+' days to it would erode the slack of about <b>'+exposed+'</b> of them. '+
+    'A delay of '+delay+' days to it would use up the remaining slack of about <b>'+exposed+'</b> of them. '+
     'The main focus for the day is <b>'+esc(t.code)+'</b> and its immediate successors.</p>';
 }
 function renderRisks(){
   const rows=topRisks(10);
   document.getElementById('riskcap').textContent=rows.length+' shown · '+hpd()+' h per day';
   document.getElementById('riskbody').innerHTML=rows.map((o,i)=>{
-    const t=o.t,[emo,lab,col]=priority(o.s),d=tfDays(t);
+    const t=o.t,[lab,col]=priority(o.s),d=tfDays(t);
     return '<tr><td class="id">'+(i+1)+'</td><td class="id">'+esc(t.code)+'</td><td>'+esc(t.name)+
       '</td><td class="tf">'+(d==null?'':d.toFixed(1)+'d')+'</td><td class="tf">'+t.down+'</td><td>'+(t.lp?'<span class="badge b-lp">LP</span>':'')+
-      '</td><td class="tf" style="font-weight:600">'+o.s+'</td><td class="prio" style="color:'+col+'">'+emo+' '+lab+
+      '</td><td class="tf" style="font-weight:700">'+o.s+'</td><td class="prio" style="color:'+col+'">'+lab+
       '</td><td><button class="whybtn" data-id="'+esc(t.id)+'">Why?</button></td></tr>';
   }).join('');
   document.querySelectorAll('.whybtn').forEach(b=>b.onclick=()=>{
     const t=MODEL.byId[b.dataset.id]; const w=document.getElementById('whybox');
-    w.style.display='block'; w.innerHTML=whyText(t);
-    w.scrollIntoView({behavior:'smooth',block:'nearest'});
+    w.style.display='block'; w.innerHTML=whyText(t); w.scrollIntoView({behavior:'smooth',block:'nearest'});
   });
 }
 function renderTable(){
@@ -389,9 +530,29 @@ function renderTable(){
 }
 function populatePicker(){ document.getElementById('acts').innerHTML=MODEL.tasks.map(t=>'<option value="'+esc(t.code)+' · '+esc(t.name)+'">').join(''); }
 
-/* 5. Delay simulator and dependency chain */
+/* activity detail card (search + gantt link target) */
+function dcell(l,v){ return '<div class="dc"><div class="dl">'+l+'</div><div class="dv">'+v+'</div></div>'; }
+function renderDetail(t){
+  const d=document.getElementById('detail');
+  if(!t){ d.innerHTML='<div class="dmsg">No matching activity. Try a different ID or name.</div>'; return; }
+  const tfd=tfDays(t), s=riskScore(t), [lab,col]=priority(s);
+  d.innerHTML='<div class="dcard">'+
+    '<div class="dhead"><span class="dcode">'+esc(t.code)+'</span><span class="dprio" style="color:'+col+'">Risk '+s+' · '+lab+'</span></div>'+
+    '<div class="dname">'+esc(t.name)+'</div>'+
+    '<div class="dgrid">'+
+      dcell('Status',statusText(t.status))+dcell('Total float',tfd==null?'na':tfd.toFixed(1)+' days')+dcell('On Longest Path',t.lp?'Yes':'No')+
+      dcell('Start',fmt(t.es)||'na')+dcell('Finish',fmt(t.ef)||'na')+dcell('Downstream',t.down)+
+    '</div>'+
+    '<div class="dwhy">'+whyText(t)+'</div>'+
+    '<button class="btn ghost" id="dsim">Simulate a delay on this activity</button>'+
+    '</div>';
+  const ds=document.getElementById('dsim');
+  if(ds) ds.onclick=()=>{ document.getElementById('simpick').value=t.code+' · '+t.name; runSim(); document.getElementById('simout').scrollIntoView({behavior:'smooth',block:'nearest'}); };
+}
+
+/* delay simulator (fixed: only counts activities that still had slack) */
 function findActivity(q){
-  q=q.trim().toLowerCase(); if(!q) return null;
+  q=(q||'').trim().toLowerCase(); if(!q) return null;
   return MODEL.tasks.find(x=>(x.code+' · '+x.name).toLowerCase()===q)
       || MODEL.tasks.find(x=>String(x.code).toLowerCase()===q)
       || MODEL.tasks.find(x=>x.name.toLowerCase().includes(q));
@@ -412,39 +573,41 @@ function runSim(){
   const delay=+document.getElementById('simdelay').value||0;
   const out=document.getElementById('simout');
   if(!t){ out.innerHTML='<div class="simverdict">No matching activity. Pick one from the list.</div>'; return; }
+  if(delay<=0){ out.innerHTML='<div class="simverdict">Enter a delay of at least 1 day to see its impact.</div>'; return; }
   const reachSet=[...MODEL.reach(t.id)].map(id=>MODEL.byId[id]).filter(Boolean);
   const thrHr=delay*hpd();
-  const affected=reachSet.filter(x=>!isComplete(x)&&x.tfHr!=null&&x.tfHr<thrHr).sort((a,b)=>a.tfHr-b.tfHr);
-  const critExposed=affected.filter(x=>tfDays(x)<=0).length;
-  const lpAffected=affected.filter(x=>x.lp).length;
-  const minFloat=reachSet.length?Math.min(...reachSet.map(x=>tfDays(x)).filter(v=>v!=null)):null;
-  let html='<div class="simverdict">Delaying <b>'+esc(t.code)+'</b> by '+delay+' days would erode the slack of <b>'+affected.length+'</b> of its '+reachSet.length+' downstream activities.</div>';
+  const exposed=reachSet.filter(x=>!isComplete(x)&&x.tfHr!=null&&x.tfHr>=0&&x.tfHr<thrHr).sort((a,b)=>a.tfHr-b.tfHr);
+  const already=reachSet.filter(x=>!isComplete(x)&&x.tfHr!=null&&x.tfHr<0).length;
+  const lpAffected=exposed.filter(x=>x.lp).length;
+  const posFloats=reachSet.map(x=>tfDays(x)).filter(v=>v!=null&&v>=0);
+  const minFloat=posFloats.length?Math.min(...posFloats):null;
+  let html='<div class="simverdict">Delaying <b>'+esc(t.code)+'</b> by '+delay+' day'+(delay===1?'':'s')+' would use up the remaining slack of <b>'+exposed.length+'</b> downstream activit'+(exposed.length===1?'y':'ies')+', turning them critical.</div>';
   html+='<div class="metrics">'+
-    '<div class="metric"><div class="l">Downstream</div><div class="v">'+reachSet.length+'</div></div>'+
-    '<div class="metric hot"><div class="l">Float exceeded</div><div class="v">'+affected.length+'</div></div>'+
-    '<div class="metric hot"><div class="l">Critical exposed</div><div class="v">'+critExposed+'</div></div>'+
-    '<div class="metric"><div class="l">Longest Path hit</div><div class="v">'+lpAffected+'</div></div>'+
-    '<div class="metric"><div class="l">Min downstream float</div><div class="v">'+(minFloat==null?'':minFloat.toFixed(1)+'d')+'</div></div></div>';
+    '<div class="metric"><div class="l">Downstream total</div><div class="v">'+reachSet.length+'</div></div>'+
+    '<div class="metric hot"><div class="l">Lose their slack</div><div class="v">'+exposed.length+'</div></div>'+
+    '<div class="metric"><div class="l">On Longest Path</div><div class="v">'+lpAffected+'</div></div>'+
+    '<div class="metric"><div class="l">Already critical</div><div class="v">'+already+'</div></div>'+
+    '<div class="metric"><div class="l">Smallest slack left</div><div class="v">'+(minFloat==null?'':minFloat.toFixed(1)+'d')+'</div></div></div>';
   const levels=chainLevels(t.id,4,6);
-  html+='<div class="lvlhdr" style="margin-top:6px">Dependency chain (first '+(levels.length-1)+' levels)</div><div class="chain">';
+  html+='<div class="lvlhdr" style="margin-top:6px">Dependency chain (successors, up to 4 levels)</div><div class="chain">';
   levels.forEach((lvl,i)=>{ if(i) html+='<div class="arrow">&rarr;</div>'; html+='<div class="level"><div class="lvlhdr">'+(i===0?'Selected':'Level '+i)+'</div>'+lvl.map(nodeCard).join('')+'</div>'; });
   html+='</div>';
-  if(affected.length){
-    html+='<div class="lvlhdr" style="margin-top:14px">Float deficit for affected activities</div>';
-    html+='<div class="tablewrap card" style="margin-top:6px"><div class="scroll"><table><thead><tr><th>Activity</th><th>Name</th><th class="r">Current float</th><th class="r">Delay</th><th class="r">Deficit</th></tr></thead><tbody>';
-    html+=affected.slice(0,30).map(x=>{const cf=tfDays(x);const def=delay-cf;return '<tr><td class="id">'+esc(x.code)+'</td><td>'+esc(x.name)+'</td><td class="tf">'+cf.toFixed(1)+'d</td><td class="tf">'+delay+'d</td><td class="tf" style="color:var(--crit);font-weight:600">'+def.toFixed(1)+'d</td></tr>';}).join('');
-    html+='</tbody></table></div></div>'+(affected.length>30?'<div class="note">showing first 30 of '+affected.length+'</div>':'');
+  if(exposed.length){
+    html+='<div class="lvlhdr" style="margin-top:14px">Slack used up on affected activities</div>';
+    html+='<div class="tablewrap card" style="margin-top:6px"><div class="scroll"><table><thead><tr><th>Activity</th><th>Name</th><th class="r">Slack now</th><th class="r">Delay</th><th class="r">Shortfall</th></tr></thead><tbody>';
+    html+=exposed.slice(0,30).map(x=>{const cf=tfDays(x);const sh=delay-cf;return '<tr><td class="id">'+esc(x.code)+'</td><td>'+esc(x.name)+'</td><td class="tf">'+cf.toFixed(1)+'d</td><td class="tf">'+delay+'d</td><td class="tf" style="color:var(--crit);font-weight:700">'+sh.toFixed(1)+'d</td></tr>';}).join('');
+    html+='</tbody></table></div></div>'+(exposed.length>30?'<div class="note">showing first 30 of '+exposed.length+'</div>':'');
   }
   out.innerHTML=html;
 }
 
-/* 6. CSV export (offline) */
+/* CSV export */
 function download(name,text){ const blob=new Blob([text],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
 function csvCell(s){ s=String(s==null?'':s); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
 function exportRisks(){
   const rows=topRisks(10);
   let csv='Rank,Activity ID,Name,Float (days),Downstream,Longest Path,Exposure Score,Priority\n';
-  rows.forEach((o,i)=>{const t=o.t,d=tfDays(t),[,lab]=priority(o.s);
+  rows.forEach((o,i)=>{const t=o.t,d=tfDays(t),[lab]=priority(o.s);
     csv+=[i+1,t.code,t.name,(d==null?'':d.toFixed(1)),t.down,(t.lp?'Y':'N'),o.s,lab].map(csvCell).join(',')+'\n';});
   download('top_10_schedule_risks.csv',csv);
 }
@@ -460,7 +623,7 @@ function exportBrief(){
   download('daily_brief.csv',csv);
 }
 
-/* 7. Gantt / programme timeline */
+/* Gantt */
 let GANTTF='top10';
 function ganttSet(){
   if(GANTTF==='top10') return topRisks(10).map(o=>o.t);
@@ -476,8 +639,7 @@ function renderGantt(){
   const min=new Date(Math.min(...capped.map(t=>+t.es))), max=new Date(Math.max(...capped.map(t=>+t.ef)));
   const span=Math.max(1,max-min);
   const pct=d=>Math.max(0,Math.min(100,(d-min)/span*100));
-  let ticks='';
-  const showMonths=(max-min)<(1000*60*60*24*365*3);
+  let ticks=''; const showMonths=(max-min)<(1000*60*60*24*365*3);
   for(let y=min.getFullYear();y<=max.getFullYear();y++){
     const jan=new Date(y,0,1); if(jan>=min&&jan<=max) ticks+='<span class="tick" style="left:'+pct(jan)+'%">'+y+'</span>';
     if(showMonths) for(let m=0;m<12;m++){const d=new Date(y,m,1); if(d>=min&&d<=max) ticks+='<span class="tickm" style="left:'+pct(d)+'%"></span>';}
@@ -487,8 +649,8 @@ function renderGantt(){
   let html='<div class="grow ghead"><div class="glabel">Activity</div><div class="gaxis">'+ticks+'</div></div><div class="grows">';
   capped.forEach(t=>{
     const b=band(t); const cls=b==='crit'?'crit':b==='a5'?'a5':b==='a10'?'a10':t.lp?'lp':'norm';
-    const l=pct(t.es), w=Math.max(0.5,pct(t.ef)-pct(t.es));
-    const tip=esc(t.code)+' '+esc(t.name)+' | '+fmt(t.es)+' to '+fmt(t.ef)+' | float '+(tfDays(t)==null?'na':tfDays(t).toFixed(1)+'d');
+    const l=pct(t.es), w=Math.max(0.5,pct(t.ef)-pct(t.es)); t._l=l; t._w=w;
+    const tip=esc(t.code)+' '+esc(t.name)+' | '+fmt(t.es)+' to '+fmt(t.ef)+' | float '+(tfDays(t)==null?'na':tfDays(t).toFixed(1)+'d')+' | click to open';
     html+='<div class="grow"><div class="glabel" title="'+tip+'">'+esc(t.code)+' <span class="gl2">'+esc(t.name)+'</span></div>'+
       '<div class="gtrack" style="background:'+marker+'"><div class="gbar '+cls+'" data-code="'+esc(t.code)+'" title="'+tip+'" style="left:'+l+'%;width:'+w+'%"></div></div></div>';
   });
@@ -497,21 +659,22 @@ function renderGantt(){
   g.innerHTML=html;
   g.querySelectorAll('.gbar').forEach(bar=>bar.onclick=()=>{
     const t=MODEL.tasks.find(x=>x.code===bar.dataset.code); if(!t) return;
-    document.getElementById('simpick').value=t.code+' · '+t.name; runSim();
-    document.getElementById('simout').scrollIntoView({behavior:'smooth',block:'nearest'});
+    document.getElementById('actsearch').value=t.code+' · '+t.name; renderDetail(t);
+    document.getElementById('detail').scrollIntoView({behavior:'smooth',block:'center'});
   });
 }
 
-/* refresh and events */
 function refresh(){ if(!MODEL) return; renderSummary(); renderBrief(); renderRisks(); renderTable(); renderGantt(); }
 function loadText(text){
   const tab=parseXER(text);
   if(!tab.TASK){ alert('No TASK table found. Is this a valid P6 .xer export?'); return; }
   MODEL=buildModel(tab);
   document.getElementById('app').classList.remove('hidden');
+  document.body.classList.remove('initial-screen');
   document.getElementById('dropzone').classList.add('hidden');
   populatePicker(); refresh();
 }
+function resetApp(){ document.body.classList.add('initial-screen'); MODEL=null; document.getElementById('app').classList.add('hidden'); document.getElementById('dropzone').classList.remove('hidden'); document.getElementById('filein').value=''; document.getElementById('detail').innerHTML=''; document.getElementById('simout').innerHTML=''; document.getElementById('whybox').style.display='none'; window.scrollTo(0,0); }
 function readFile(f){ const rd=new FileReader(); rd.onload=e=>{ let text; try{text=new TextDecoder('windows-1252').decode(e.target.result);}catch(_){text=new TextDecoder('utf-8').decode(e.target.result);} loadText(text); }; rd.readAsArrayBuffer(f); }
 const dz=document.getElementById('dropzone'), fi=document.getElementById('filein');
 dz.onclick=()=>fi.click();
@@ -529,6 +692,124 @@ document.getElementById('simrun').onclick=runSim;
 document.getElementById('expbrief').onclick=exportBrief;
 document.getElementById('exprisk').onclick=exportRisks;
 document.querySelectorAll('#ganttfilter button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#ganttfilter button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');GANTTF=b.dataset.g;renderGantt();});
+document.getElementById('btnsearch').onclick=()=>renderDetail(findActivity(document.getElementById('actsearch').value));
+document.getElementById('actsearch').addEventListener('keydown',e=>{ if(e.key==='Enter') renderDetail(findActivity(e.target.value)); });
+document.getElementById('btnhelp').onclick=()=>{document.getElementById('menupanel').hidden=true;document.getElementById('helpmodal').hidden=false;};
+document.getElementById('btnhelpclose').onclick=()=>document.getElementById('helpmodal').hidden=true;
+document.getElementById('helpmodal').addEventListener('click',e=>{ if(e.target.id==='helpmodal') e.currentTarget.hidden=true; });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.getElementById('helpmodal').hidden=true; document.getElementById('globalsearchmodal').hidden=true; } });
+document.getElementById('btnreset').onclick=()=>{document.getElementById('menupanel').hidden=true;resetApp();};
+document.getElementById('btnprint').onclick=()=>{document.getElementById('menupanel').hidden=true;setTimeout(()=>window.print(),60);};
+(function(){
+  const mt=document.getElementById('menutoggle'), mp=document.getElementById('menupanel');
+  if(mt&&mp){
+    mt.onclick=e=>{ e.stopPropagation(); const willOpen=mp.hidden; mp.hidden=!willOpen; mt.setAttribute('aria-expanded',String(willOpen)); };
+    document.addEventListener('click',e=>{ if(!mp.hidden && !e.target.closest('.menu')) mp.hidden=true; });
+  }
+})();
+(function(){
+  const hdr=document.querySelector('#siteHeader'), glow=document.querySelector('.header-glow');
+  if(!hdr||!glow) return;
+  let lastY=window.scrollY||0, lastTime=performance.now(), velocity=0, phase=0;
+  function tick(now){
+    const y=window.scrollY||0, dt=Math.max(8,now-lastTime);
+    const dy=y-lastY;
+    const scrollPxPerSec=Math.abs(dy)/(dt/1000);
+
+    /* Idle: slow left-to-right.
+       Scroll down: reverse (right-to-left).
+       Scroll up: original left-to-right.
+       The stronger the scroll, the stronger the directional response. */
+    const direction = dy > 0 ? -1 : (dy < 0 ? 1 : 0);
+    const targetVelocity = direction===0
+      ? 0.055
+      : direction * (0.055 + Math.min(scrollPxPerSec*0.0032,1.45));
+
+    velocity += (targetVelocity-velocity)*0.12;
+    phase=(phase+velocity+200)%200;
+    glow.style.backgroundPosition=phase.toFixed(2)+'% 50%';
+    lastY=y; lastTime=now;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+
+(function(){
+  const modal=document.getElementById('globalsearchmodal');
+  const input=document.getElementById('globalsearchinput');
+  const results=document.getElementById('globalsearchresults');
+  const openBtn=document.getElementById('btnGlobalSearch');
+  const closeBtn=document.getElementById('btnGlobalSearchClose');
+  const runBtn=document.getElementById('btnGlobalSearchRun');
+  if(!modal||!input||!results||!openBtn) return;
+
+  function buildIndex(){
+    const items=[];
+    document.querySelectorAll('main h2').forEach(h=>{
+      const section=h.nextElementSibling;
+      items.push({title:h.textContent.trim(), text:(section?section.innerText:'').trim(), el:h});
+    });
+    if(typeof MODEL==='object' && MODEL && Array.isArray(MODEL.tasks)){
+      MODEL.tasks.forEach(t=>items.push({
+        title:String(t.code||'Activity'),
+        text:String(t.name||'')+' · Float '+(typeof tfDays==='function'&&tfDays(t)!=null?tfDays(t).toFixed(1)+' days':'n/a')+(t.lp?' · Longest Path':''),
+        el:null, activity:t
+      }));
+    }
+    const bodyText=document.body.innerText;
+    items.push({title:'Website',text:bodyText.slice(0,6000),el:document.querySelector('main')});
+    return items;
+  }
+
+  function highlight(s,q){
+    const safe=esc(s);
+    if(!q) return safe;
+    const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
+    return safe.replace(re,'<mark>$1</mark>');
+  }
+
+  function search(){
+    const q=input.value.trim().toLowerCase();
+    if(!q){results.innerHTML='<div class="dmsg">Start typing to search.</div>';return;}
+    const found=buildIndex().filter(x=>(x.title+' '+x.text).toLowerCase().includes(q)).slice(0,40);
+    if(!found.length){results.innerHTML='<div class="dmsg">No results found for “'+esc(input.value.trim())+'”.</div>';return;}
+    results.innerHTML=found.map((x,i)=>{
+      const raw=x.text.replace(/\s+/g,' ').trim();
+      const pos=raw.toLowerCase().indexOf(q);
+      const start=Math.max(0,pos-85), snippet=raw.slice(start,start+210);
+      return '<div class="gresult" data-i="'+i+'"><div class="gt">'+highlight(x.title,q)+'</div><div class="gs">'+highlight((start>0?'…':'')+snippet+(snippet.length<raw.length?'…':''),q)+'</div></div>';
+    }).join('');
+    results.querySelectorAll('.gresult').forEach((r,i)=>{
+      r.onclick=()=>{
+        const item=found[i];
+        modal.hidden=true;
+        if(item.activity && typeof renderDetail==='function'){
+          document.getElementById('actsearch').value=item.activity.code+' · '+item.activity.name;
+          renderDetail(item.activity);
+          document.getElementById('detail').scrollIntoView({behavior:'smooth',block:'center'});
+        }else if(item.el){
+          item.el.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      };
+    });
+  }
+
+  openBtn.onclick=()=>{
+    document.getElementById('menupanel').hidden=true;
+    modal.hidden=false;
+    input.value='';
+    results.innerHTML='<div class="dmsg">Start typing to search.</div>';
+    setTimeout(()=>input.focus(),40);
+  };
+  closeBtn.onclick=()=>modal.hidden=true;
+  runBtn.onclick=search;
+  input.addEventListener('input',search);
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter') search();
+    if(e.key==='Escape') modal.hidden=true;
+  });
+  modal.addEventListener('click',e=>{if(e.target===modal) modal.hidden=true;});
+})();
 </script>
 </body>
 </html>
