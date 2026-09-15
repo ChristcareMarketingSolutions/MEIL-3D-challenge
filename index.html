@@ -301,7 +301,6 @@
           <button data-mode="lp" aria-pressed="false">Longest Path</button>
         </div></div>
       <div class="ctl" id="thrctl"><span class="lab">Threshold (days)</span><input type="number" id="thr" value="0" step="1" style="width:64px"></div>
-      <div class="ctl"><span class="lab">Hours per day</span><input type="number" id="hpd" value="8" step="1" min="1" style="width:64px"></div>
       <div class="ctl"><span class="lab">Reference point</span>
         <div class="seg" id="refmode">
           <button data-ref="data" aria-pressed="true">Data date</button>
@@ -415,23 +414,27 @@ function num(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
 
 let MODEL=null, MODE='tf', REF='data', WIN='year', MAXDOWN=1;
 function buildModel(tab){
-  const T=tab.TASK||[], P=tab.TASKPRED||[], PRJ=tab.PROJECT||[];
+  const T=tab.TASK||[], P=tab.TASKPRED||[], PRJ=tab.PROJECT||[], CAL=tab.CALENDAR||[];
   const proj=PRJ[0]||{};
   const dataDate=pdate(proj.last_recalc_date)||pdate(proj.plan_end_date)||null;
-  const tasks=T.map(r=>({ id:r.task_id, code:r.task_code, name:r.task_name||'', status:r.status_code,
+  const cal={}; let defHpd=8;
+  CAL.forEach(c=>{ const h=num(c.day_hr_cnt); if(c.clndr_id) cal[c.clndr_id]=h||8; if(c.default_flag==='Y'&&h) defHpd=h; });
+  const tasks=T.map(r=>({ id:r.task_id, code:r.task_code, name:r.task_name||'', status:r.status_code, clndr:r.clndr_id,
     tfHr:num(r.total_float_hr_cnt),
     es:pdate(r.early_start_date)||pdate(r.target_start_date)||pdate(r.act_start_date),
     ef:pdate(r.early_end_date)||pdate(r.target_end_date)||pdate(r.act_end_date),
     lp:r.driving_path_flag==='Y' }));
+  if(!CAL.some(c=>c.default_flag==='Y')){ const cnt={}; tasks.forEach(t=>{ if(t.clndr) cnt[t.clndr]=(cnt[t.clndr]||0)+1; }); const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]; if(top&&cal[top]) defHpd=cal[top]; }
   const byId={}; tasks.forEach(t=>byId[t.id]=t);
   const succ={}; P.forEach(r=>{ (succ[r.pred_task_id]=succ[r.pred_task_id]||[]).push(r.task_id); });
   function reach(id){ const seen=new Set(),st=[id]; while(st.length){const x=st.pop();for(const s of (succ[x]||[])){if(!seen.has(s)){seen.add(s);st.push(s);}}} return seen; }
   let maxd=1; tasks.forEach(t=>{ t.down=reach(t.id).size; if(t.down>maxd) maxd=t.down; });
   MAXDOWN=maxd;
-  return {proj,dataDate,tasks,byId,succ,reach};
+  let finish=pdate(proj.scd_end_date)||null; if(!finish){ tasks.forEach(t=>{ if(t.ef&&(!finish||t.ef>finish)) finish=t.ef; }); }
+  return {proj,dataDate,finish,tasks,byId,succ,reach,cal,defHpd};
 }
-function hpd(){ return Math.max(1, +document.getElementById('hpd').value||8); }
-function tfDays(t){ return t.tfHr==null?null:t.tfHr/hpd(); }
+function calHours(t){ if(MODEL&&MODEL.cal&&t&&t.clndr&&MODEL.cal[t.clndr]) return MODEL.cal[t.clndr]; return (MODEL&&MODEL.defHpd)||8; }
+function tfDays(t){ return t.tfHr==null?null:t.tfHr/calHours(t); }
 function isComplete(t){ return t.status==='TK_Complete'; }
 function isCritical(t){ if(MODE==='lp') return t.lp; const thr=+document.getElementById('thr').value||0; return !isComplete(t) && tfDays(t)!=null && tfDays(t)<=thr; }
 function band(t){ const d=tfDays(t); if(d==null) return null; if(d<=0) return 'crit'; if(d<=5) return 'a5'; if(d<=10) return 'a10'; return t.lp?'lp':null; }
@@ -479,8 +482,9 @@ function renderSummary(){
   const floats=M.tasks.map(tfDays).filter(v=>v!=null);
   const minF=floats.length?Math.min(...floats):null;
   document.getElementById('summary').innerHTML=
-    kpi('Project',esc(M.proj.proj_short_name||''))+kpi('Data date',fmt(M.dataDate))+
+    kpi('Project',esc(M.proj.proj_short_name||''))+kpi('Data date',fmt(M.dataDate))+kpi('Completion date',fmt(M.finish))+
     kpi('Activities',tot+' <small>('+ns+' NS / '+ac+' active / '+cp+' done)</small>')+
+    kpi('Working day',M.defHpd+' <small>h (from P6)</small>')+
     kpi('Critical (current definition)',crit)+kpi('Min total float',minF==null?'':minF.toFixed(0)+' <small>days</small>');
   const h=document.getElementById('health');
   if(minF!=null&&minF<-30){ h.className='health warn';
@@ -495,7 +499,7 @@ function renderBrief(){
   const b=document.getElementById('brief');
   if(!top){ b.innerHTML='<div class="bt">TODAY&rsquo;S SCHEDULE BRIEF</div><p>No activities loaded.</p>'; return; }
   const t=top.t, delay=5, tf=tfDays(t);
-  const exposed=[...M.reach(t.id)].map(id=>M.byId[id]).filter(x=>x&&!isComplete(x)&&x.tfHr!=null&&x.tfHr>=0&&x.tfHr<delay*hpd()).length;
+  const exposed=[...M.reach(t.id)].map(id=>M.byId[id]).filter(x=>x&&!isComplete(x)&&x.tfHr!=null&&x.tfHr>=0&&x.tfHr<delay*calHours(x)).length;
   b.innerHTML='<div class="bt">TODAY&rsquo;S SCHEDULE BRIEF · '+fmt(refDate())+'</div><p>'+
     '<b>'+crit.length+'</b> activit'+(crit.length===1?'y is':'ies are')+' critical and <b>'+near.length+'</b> near critical. '+
     'The activity carrying the most exposure is <b>'+esc(t.code)+'</b>, '+esc(t.name)+', with '+(tf==null?'no recorded float':tf.toFixed(1)+' days of float')+(t.lp?', and it sits on the Longest Path':'')+'. It has '+t.down+' downstream activities. '+
@@ -504,7 +508,7 @@ function renderBrief(){
 }
 function renderRisks(){
   const rows=topRisks(10);
-  document.getElementById('riskcap').textContent=rows.length+' shown · '+hpd()+' h per day';
+  document.getElementById('riskcap').textContent=rows.length+' shown';
   document.getElementById('riskbody').innerHTML=rows.map((o,i)=>{
     const t=o.t,[lab,col]=priority(o.s),d=tfDays(t);
     return '<tr><td class="id">'+(i+1)+'</td><td class="id">'+esc(t.code)+'</td><td>'+esc(t.name)+
@@ -575,8 +579,7 @@ function runSim(){
   if(!t){ out.innerHTML='<div class="simverdict">No matching activity. Pick one from the list.</div>'; return; }
   if(delay<=0){ out.innerHTML='<div class="simverdict">Enter a delay of at least 1 day to see its impact.</div>'; return; }
   const reachSet=[...MODEL.reach(t.id)].map(id=>MODEL.byId[id]).filter(Boolean);
-  const thrHr=delay*hpd();
-  const exposed=reachSet.filter(x=>!isComplete(x)&&x.tfHr!=null&&x.tfHr>=0&&x.tfHr<thrHr).sort((a,b)=>a.tfHr-b.tfHr);
+  const exposed=reachSet.filter(x=>!isComplete(x)&&x.tfHr!=null&&x.tfHr>=0&&x.tfHr<delay*calHours(x)).sort((a,b)=>a.tfHr-b.tfHr);
   const already=reachSet.filter(x=>!isComplete(x)&&x.tfHr!=null&&x.tfHr<0).length;
   const lpAffected=exposed.filter(x=>x.lp).length;
   const posFloats=reachSet.map(x=>tfDays(x)).filter(v=>v!=null&&v>=0);
@@ -634,7 +637,7 @@ function ganttSet(){
 function renderGantt(){
   const g=document.getElementById('gantt');
   const set=ganttSet().filter(t=>t.es&&t.ef).sort((a,b)=>a.es-b.es);
-  const total=set.length, capped=set.slice(0,120);
+  const total=set.length, capped=set;
   if(!capped.length){ g.innerHTML='<div style="padding:16px;color:var(--muted);font-family:var(--mono);font-size:12px">No dated activities in this view.</div>'; return; }
   const min=new Date(Math.min(...capped.map(t=>+t.es))), max=new Date(Math.max(...capped.map(t=>+t.ef)));
   const span=Math.max(1,max-min);
@@ -655,7 +658,7 @@ function renderGantt(){
       '<div class="gtrack" style="background:'+marker+'"><div class="gbar '+cls+'" data-code="'+esc(t.code)+'" title="'+tip+'" style="left:'+l+'%;width:'+w+'%"></div></div></div>';
   });
   html+='</div>';
-  if(total>120) html+='<div style="padding:8px 12px;color:var(--muted);font-family:var(--mono);font-size:11px">showing first 120 of '+total+' by start date</div>';
+  html+='<div style="padding:8px 12px;color:var(--muted);font-family:var(--mono);font-size:11px">'+total+' activities shown</div>';
   g.innerHTML=html;
   g.querySelectorAll('.gbar').forEach(bar=>bar.onclick=()=>{
     const t=MODEL.tasks.find(x=>x.code===bar.dataset.code); if(!t) return;
@@ -687,7 +690,6 @@ document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{document.que
 document.querySelectorAll('#refmode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#refmode button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');REF=b.dataset.ref;refresh();});
 document.querySelectorAll('#windowtabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#windowtabs button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');WIN=b.dataset.win;renderTable();});
 document.getElementById('thr').oninput=refresh;
-document.getElementById('hpd').oninput=refresh;
 document.getElementById('simrun').onclick=runSim;
 document.getElementById('expbrief').onclick=exportBrief;
 document.getElementById('exprisk').onclick=exportRisks;
