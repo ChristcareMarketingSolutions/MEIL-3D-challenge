@@ -712,7 +712,7 @@ document.getElementById('btnprint').onclick=()=>{document.getElementById('menupa
 (function(){
   const hdr=document.querySelector('#siteHeader'), glow=document.querySelector('.header-glow');
   if(!hdr||!glow) return;
-  let lastY=window.scrollY||0, lastTime=performance.now(), velocity=0, phase=0;
+  let lastY=window.scrollY||0, lastTime=performance.now(), velocity=100, phase=3;
   function tick(now){
     const y=window.scrollY||0, dt=Math.max(8,now-lastTime);
     const dy=y-lastY;
@@ -724,10 +724,10 @@ document.getElementById('btnprint').onclick=()=>{document.getElementById('menupa
        The stronger the scroll, the stronger the directional response. */
     const direction = dy > 0 ? -1 : (dy < 0 ? 1 : 0);
     const targetVelocity = direction===0
-      ? 0.055
-      : direction * (0.055 + Math.min(scrollPxPerSec*0.0032,1.45));
+      ? 0.6
+      : direction * (0.055 + Math.min(scrollPxPerSec*0.32,1.45));
 
-    velocity += (targetVelocity-velocity)*0.12;
+    velocity += (targetVelocity-velocity)*1.8;
     phase=(phase+velocity+200)%200;
     glow.style.backgroundPosition=phase.toFixed(2)+'% 50%';
     lastY=y; lastTime=now;
